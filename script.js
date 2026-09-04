@@ -57,19 +57,33 @@ function unlockSkin(skin){
 function closeClaw(){$('#claw').classList.remove('dropping');clawActive=false;if(rewardQueue.length){openClaw();return}show('gamePanel');running=true;updateHud();cancelAnimationFrame(raf);loop()}
 
 const canvas=$('#game'),ctx=canvas.getContext('2d'),W=520,H=400,CELL=24,OX=8,OY=8,JAIL={x:32,y:300,w:96,h:68};
-const MAZE=[
+let MAZE=[
  '##########.##########','#...................#','#.###.###.#.###.###.#',
  '#.#.....#...#.....#.#','#.#.###.#####.###.#.#','#...................#',
  '#.###.#.#####.#.###.#','......#.......#......','#####.##....###.#####',
  '#.........#.........#','#.###.###.#.###.###.#','#...#...........#...#',
  '###.#.#.#####.#.#.###','#.....#...#...#.....#','#...................#','##########.##########'
 ];
+const MAZE_VARIANTS=[MAZE,[
+ '##########.##########','#...................#','#.#####.#####.#####.#',
+ '#.....#...#...#.....#','###.#.#.#.#.#.#.#.###','#...#...........#...#',
+ '#.#.###.#####.###.#.#','......#.......#......','#####.##....###.#####',
+ '#.....#...#...#.....#','#.###.#.#.#.#.#.###.#','#...#...........#...#',
+ '###.#.###.#.###.#.###','#.....#.......#.....#','#.........#.........#','##########.##########'
+],[
+ '##########.##########','#.........#.........#','#.#####.#.#.#.#####.#',
+ '#...#...#...#...#...#','#.#.#.#####.#####.#.#','#.#.................#',
+ '#.###.###.#####.###.#','......#.......#......','#####.##....###.#####',
+ '#.........#.........#','#.###.#####.#####.###','#...#...........#...#',
+ '#.#.#.###.#.###.#.#.#','#.#.....#...#.....#.#','#.........#.........#','##########.##########'
+]];
+MAZE_VARIANTS[1][8]='#####.##....###.#####';
 const DIRS=[{x:1,y:0,a:0},{x:-1,y:0,a:Math.PI},{x:0,y:1,a:Math.PI/2},{x:0,y:-1,a:-Math.PI/2}];
 let player,ghosts,dots,apples,keys={},wanted={x:0,y:0},frightenedUntil=0,hitLock=false;
 const center=(c,r)=>({x:OX+c*CELL+CELL/2,y:OY+r*CELL+CELL/2});
 const tileAt=(x,y)=>({c:Math.floor((x-OX)/CELL),r:Math.floor((y-OY)/CELL)});
 const open=(c,r)=>r===7&&(c===-1||c===MAZE[0].length)||c===10&&(r===-1||r===MAZE.length)||r>=0&&r<MAZE.length&&c>=0&&c<MAZE[0].length&&MAZE[r][c]!=='#';
-function canStand(x,y,r=9){let outsideJail=x+r<JAIL.x||x-r>JAIL.x+JAIL.w||y+r<JAIL.y||y-r>JAIL.y+JAIL.h;return outsideJail&&[[-r,-r],[r,-r],[-r,r],[r,r]].every(([dx,dy])=>{let t=tileAt(x+dx,y+dy);return open(t.c,t.r)})}
+function canStand(x,y,r=9,escapePlayer=false){let outsideJail=x+r<JAIL.x||x-r>JAIL.x+JAIL.w||y+r<JAIL.y||y-r>JAIL.y+JAIL.h;let playerInside=escapePlayer&&player&&player.x>JAIL.x-r&&player.x<JAIL.x+JAIL.w+r&&player.y>JAIL.y-r&&player.y<JAIL.y+JAIL.h+r;let jailOkay=outsideJail||playerInside;return jailOkay&&[[-r,-r],[r,-r],[-r,r],[r,r]].every(([dx,dy])=>{let t=tileAt(x+dx,y+dy);return open(t.c,t.r)})}
 function wrapTunnel(o){let t=tileAt(o.x,o.y);if(t.r===7){if(o.x<center(0,7).x)o.x=center(20,7).x;if(o.x>center(20,7).x)o.x=center(0,7).x}if(t.c===10){if(o.y<center(10,0).y)o.y=center(10,15).y;if(o.y>center(10,15).y)o.y=center(10,0).y}}
 function jailSpot(g){let i=ghosts.indexOf(g);return {x:JAIL.x+17+i*21,y:JAIL.y+39}}
 function resetGame(){
@@ -85,7 +99,7 @@ function resetGame(){
  let choices=dots.filter((_,i)=>i%9===0),count=1+Math.floor(Math.random()*2);apples=[];
  while(apples.length<count&&choices.length){let i=Math.floor(Math.random()*choices.length),d=choices.splice(i,1)[0];apples.push({x:d.x,y:d.y,eaten:false})}
 }
-function startGame(revive){show('gamePanel');running=true;if(!revive){score=0;lives=3;level=1;runStartHigh=highScore;nextMilestone=5000;beatHighRewarded=false;rewardQueue=[];resetGame()}else{let p=center(9,14);Object.assign(player,p,{dir:{x:0,y:0}});wanted={x:0,y:0};ghosts.filter(g=>!g.jailedUntil).forEach((g,i)=>Object.assign(g,center(...g.home),{dir:DIRS[i%2],decisionTile:''}));frightenedUntil=Date.now()+5000}updateHud();cancelAnimationFrame(raf);loop()}
+function startGame(revive){show('gamePanel');running=true;if(!revive){score=0;lives=3;level=1;MAZE=MAZE_VARIANTS[0];runStartHigh=highScore;nextMilestone=5000;beatHighRewarded=false;rewardQueue=[];resetGame()}else{let p=center(9,14);Object.assign(player,p,{dir:{x:0,y:0}});wanted={x:0,y:0};ghosts.filter(g=>!g.jailedUntil).forEach((g,i)=>Object.assign(g,center(...g.home),{dir:DIRS[i%2],decisionTile:''}));frightenedUntil=Date.now()+5000}updateHud();cancelAnimationFrame(raf);loop()}
 function speedScale(){return 1+Math.floor(level/5)*.08}
 function updateHud(){let max=Math.max(3,lives);$('#score').textContent=String(score).padStart(4,'0');$('#highScore').textContent=String(highScore).padStart(4,'0');$('#level').textContent=String(level).padStart(2,'0');$('#lives').textContent='●'.repeat(lives)+'○'.repeat(max-lives)}
 addEventListener('keydown',e=>{let k=e.key.toLowerCase();if(clawActive){e.preventDefault();return}keys[k]=true;if(['arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();if(k==='arrowleft'||k==='a')setDirection(-1,0);if(k==='arrowright'||k==='d')setDirection(1,0);if(k==='arrowup'||k==='w')setDirection(0,-1);if(k==='arrowdown'||k==='s')setDirection(0,1);if(e.key==='Escape'){running=false;show('tasksPanel')}});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
@@ -100,7 +114,7 @@ function nearCenter(o,tolerance=2.2){let t=tileAt(o.x,o.y),p=center(t.c,t.r);ret
 function updatePlayer(){
  let playerSpeed=2.55*speedScale(),{t,p,near}=nearCenter(player,playerSpeed/2+.25);
  if(near){player.x=p.x;player.y=p.y;if((wanted.x||wanted.y)&&open(t.c+wanted.x,t.r+wanted.y))player.dir={...wanted};if(!open(t.c+player.dir.x,t.r+player.dir.y))player.dir={x:0,y:0}}
- let nx=player.x+player.dir.x*playerSpeed,ny=player.y+player.dir.y*playerSpeed;if(canStand(nx,ny)){player.x=nx;player.y=ny;wrapTunnel(player)}if(player.dir.x||player.dir.y)player.a=Math.atan2(player.dir.y,player.dir.x);
+ let nx=player.x+player.dir.x*playerSpeed,ny=player.y+player.dir.y*playerSpeed;if(canStand(nx,ny,9,true)){player.x=nx;player.y=ny;wrapTunnel(player)}if(player.dir.x||player.dir.y)player.a=Math.atan2(player.dir.y,player.dir.x);
 }
 function chooseGhostDir(g){
  let {t,p}=nearCenter(g);g.x=p.x;g.y=p.y;let pt=tileAt(player.x,player.y),fright=Date.now()<frightenedUntil,target=fright?pt:ghostTarget(g,pt);
@@ -129,7 +143,7 @@ function update(){
  updatePlayer();dots.forEach(d=>{if(!d.eaten&&Math.hypot(player.x-d.x,player.y-d.y)<11){d.eaten=true;award(10);beep(420,.025)}});
  apples.forEach(a=>{if(!a.eaten&&Math.hypot(player.x-a.x,player.y-a.y)<15){a.eaten=true;lives++;award(100);beep(820,.12)}});
  ghosts.forEach(g=>{updateGhost(g);if(!g.jailedUntil&&Math.hypot(player.x-g.x,player.y-g.y)<19){if(Date.now()<frightenedUntil){award(200);beep(700,.12);g.jailedUntil=Date.now()+10000;Object.assign(g,jailSpot(g),{dir:{x:0,y:0},decisionTile:''})}else hit()}});
- updateHud();if(dots.every(d=>d.eaten)){award(500);level++;resetGame();updateHud()}
+ updateHud();if(dots.every(d=>d.eaten)){award(500);level++;MAZE=MAZE_VARIANTS[level%MAZE_VARIANTS.length];resetGame();updateHud()}
 }
 function hit(){if(hitLock)return;hitLock=true;lives--;updateHud();beep(100,.3);running=false;if(lives<=0){let final=score;setTimeout(()=>{hitLock=false;$('#finalScore').textContent=String(final).padStart(4,'0');$('#defeatedHigh').textContent=String(highScore).padStart(4,'0');show('defeatedPanel')},500);return}setTimeout(()=>{hitLock=false;renderRevive();show('revivePanel')},250)}
 function wall(x,y){ctx.fillStyle='#151154';ctx.strokeStyle='#5a3cff';ctx.lineWidth=2;ctx.shadowBlur=7;ctx.shadowColor='#563cff';ctx.fillRect(x+2,y+2,CELL-4,CELL-4);ctx.strokeRect(x+3,y+3,CELL-6,CELL-6);ctx.shadowBlur=0}
