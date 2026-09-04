@@ -1,0 +1,21 @@
+.skin-dot,.prize-skin,.flying-skin{
+  border-radius:50%;
+  background:conic-gradient(from 55deg,transparent 0 70deg,var(--skin) 70deg 360deg);
+  box-shadow:none;
+  filter:drop-shadow(0 0 5px var(--skin));
+  animation:skinChomp .42s steps(2) infinite;
+}
+.skin-dot::after,.prize-skin::after,.flying-skin::after{
+  content:"";
+  position:absolute;
+  right:29%;
+  top:18%;
+  width:12%;
+  height:12%;
+  border:0;
+  border-radius:50%;
+  background:#080812;
+}
+@keyframes skinChomp{
+  50%{background:conic-gradient(from 70deg,transparent 0 40deg,var(--skin) 40deg 360deg)}
+}

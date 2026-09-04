@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Taskcade — Clear it. Play it.</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="features.css">
+  <link rel="stylesheet" href="pacman.css">
+  <link rel="stylesheet" href="claw-machine.css">
+  <link rel="stylesheet" href="joystick.css">
+  <link rel="stylesheet" href="button.css">
+  <link rel="stylesheet" href="claw-polish.css">
+  <link rel="stylesheet" href="defeated.css">
+  <style>.joystick:after{content:'CLAW'}</style>
+  <style>body,button,input{font-family:"Courier New",monospace!important}.brand,.intro h1,.mini-stats strong,.marquee b,.revive h2{font-family:Impact,"Arial Black",sans-serif!important}.task-summary{display:flex;align-items:center;gap:8px}.clear-done{border:1px solid #4b4660;background:#151323;color:#9a95aa;font-size:7px;padding:5px 7px;cursor:pointer}.clear-done:hover:not(:disabled){border-color:#ff3bd4;color:#ff3bd4}.clear-done:disabled{opacity:.3;cursor:not-allowed}</style>
+</head>
+<body>
+  <div class="noise"></div>
+  <main class="room">
+    <header class="topbar">
+      <a class="brand" href="#">TASK<span>CADE</span></a>
+      <div class="status"><i></i> SYSTEM ONLINE</div>
+      <button class="sound" id="soundBtn" aria-label="Toggle sound">SOUND: ON</button>
+    </header>
+
+    <section class="hero">
+      <div class="intro">
+        <div class="eyebrow">★ PRODUCTIVITY ARCADE ★</div>
+        <h1>CLEAR IT.<br><em>PLAY IT.</em></h1>
+        <p>Turn your to-do list into your next life. Finish a task, unlock the arcade, and keep your momentum moving.</p>
+        <div class="mini-stats">
+          <div><strong id="doneCount">00</strong><span>TASKS CRUSHED</span></div>
+          <div><strong id="streakCount">01</strong><span>DAY STREAK</span></div>
+        </div>
+        <div class="collection-wrap">
+          <div class="collection-title"><span>SKIN VAULT</span><small>CLAW MACHINE PRIZES</small></div>
+          <div class="skin-collection" id="skinCollection"></div>
+        </div>
+      </div>
+
+      <div class="cabinet-wrap">
+        <div class="cabinet">
+          <div class="marquee"><span>★</span><b>TASKCADE</b><span>★</span><small>WORK HARD · PLAY HARD</small></div>
+          <div class="screen-shell">
+            <div class="screen">
+              <section class="panel active" id="tasksPanel">
+                <div class="screen-head"><span>TODAY'S MISSIONS</span><div class="task-summary"><small id="taskProgress">0 / 0 CLEARED</small><button class="clear-done" id="clearDoneBtn">CLEAR DONE</button></div></div>
+                <div class="task-list" id="taskList"></div>
+                <form id="taskForm" class="task-form">
+                  <input id="taskInput" maxlength="55" autocomplete="off" placeholder="TYPE A NEW MISSION..." aria-label="New task">
+                  <button aria-label="Add task">＋</button>
+                </form>
+                <button class="play-btn" id="playBtn" disabled><span>▶</span> COMPLETE A TASK TO PLAY</button>
+              </section>
+
+              <section class="panel" id="gamePanel">
+                <div class="screen-head game-head"><span>SCORE <b id="score">0000</b></span><span>HIGH <b id="highScore">0000</b></span><span>LEVEL <b id="level">01</b></span><span>LIVES <b id="lives">●●●</b></span></div>
+                <canvas id="game" width="520" height="400" aria-label="Taskcade maze game"></canvas>
+                <div class="game-hint">ARROW KEYS / WASD TO MOVE · ESC TO EXIT</div>
+              </section>
+
+              <section class="panel revive" id="revivePanel">
+                <div class="ghost-face">◉ 〰 ◉</div>
+                <p class="alert">YOU GOT SLIMED!</p>
+                <h2>COMPLETE A MISSION<br>TO REVIVE</h2>
+                <div id="reviveTasks" class="revive-tasks"></div>
+                <button class="quit-btn" id="quitBtn">QUIT TO TASKS</button>
+              </section>
+
+              <section class="panel defeated" id="defeatedPanel">
+                <div class="defeated-eyebrow">— RUN OVER —</div>
+                <h2>DEFEATED</h2>
+                <div class="defeated-ghost">× 〰 ×</div>
+                <p class="defeated-copy">THE ARCADE CLAIMED ALL YOUR HEARTS.</p>
+                <div class="final-score"><span>SCORE</span><b id="finalScore">0000</b><small>HIGH SCORE <strong id="defeatedHigh">0000</strong></small></div>
+                <button class="play-again" id="playAgainBtn">▶ PLAY AGAIN</button>
+                <button class="quit-btn" id="defeatedQuitBtn">QUIT TO TASKS</button>
+              </section>
+
+              <section class="panel claw-panel" id="clawPanel">
+                <div class="claw-head"><span>PRIZE DROP!</span><small id="clawReason">SCORE BONUS</small></div>
+                <div class="claw-machine" id="clawMachine">
+                  <div class="claw-rail"></div><div class="claw" id="claw"><span class="carriage"></span><i class="cable"></i><span class="claw-hub"></span><b class="prong left"></b><b class="prong middle"></b><b class="prong right"></b></div>
+                  <div class="prize-row" id="prizeRow"></div>
+                  <div class="chute">PRIZE<br>CHUTE</div>
+                </div>
+                <p>MOVE: RED JOYSTICK &nbsp; · &nbsp; DROP: RED BUTTON</p>
+              </section>
+            </div>
+          </div>
+          <div class="controls">
+            <div class="joystick" id="joystick" role="application" aria-label="Claw-machine joystick. Drag left or right during a prize round."><i id="joystickStick"></i></div>
+            <div class="coin"><span>INSERT<br>FOCUS</span></div>
+            <button class="red-button" id="cabinetBtn" aria-label="Drop the claw" title="Drop claw"></button>
+          </div>
+        </div>
+        <div class="floor-glow"></div>
+      </div>
+    </section>
+
+    <footer><span>© 1984—2026 TASKCADE INDUSTRIES</span><span>BUILT FOR PEOPLE WITH THINGS TO DO.</span></footer>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
